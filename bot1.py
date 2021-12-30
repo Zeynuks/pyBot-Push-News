@@ -38,7 +38,7 @@ def answer(message):
             new_book = random.choice(list_book)
             list_book.remove(new_book)
             true_list_book.append(new_book)
-        for j in range(4):
+        for j in 0, 1, 2, 3,:
             url = true_list_book[j]
             page = requests.get(url)
             soup = BeautifulSoup(page.text, "lxml")
@@ -124,8 +124,7 @@ def answer(message):
 
 @bot.callback_query_handler(func = lambda call: True)
 def call_answer(call):
-    if call.data == 'history':
-        list_book = ['https://t.me/s/history_0o/']
+    def selection_articles(list_book):
         true_list_book = []
         for i in 1, 2, 3, 4, 5:
             new_book = random.choice(list_book)
@@ -156,102 +155,19 @@ def call_answer(call):
                     if j+1 == 5:
                         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: 5/5 ✅")
             five_articles()
+    if call.data == 'history':
+        list_book = ['https://t.me/s/history_0o/']
+        selection_articles(list_book)
     elif call.data == 'geography':
         list_book = ['https://t.me/s/National_Geograph1c/']
         true_list_book = []
-        for i in 1, 2, 3, 4, 5:
-            new_book = random.choice(list_book)
-            true_list_book.append(new_book)
-        for j in 0, 1, 2, 3, 4:
-            url = true_list_book[j]
-            page = requests.get(url)
-            soup = BeautifulSoup(page.text, "lxml")
-            string_1 = soup.find_all('div', class_='tgme_widget_message_wrap js-widget_message_wrap')[-1]
-            string_2 = string_1.find('div', class_='tgme_widget_message js-widget_message')
-            end = string_2.get('data-post')
-            ster = end.split('/')
-            def five_articles(): 
-                max_book = random.randint(1, int(ster[1]))
-                split = true_list_book[j].split('s/', 1)
-                true_book = split[0] + split[1] + str(max_book)
-                r = requests.get(true_book)
-                cumpot = re.search('checkActionsPosition()', r.text)
-                if cumpot == None:
-                    return five_articles()
-                else:
-                    complete = types.InlineKeyboardMarkup()
-                    open_book = types.InlineKeyboardButton(text = 'Открыть статью', url = true_book)
-                    complete.add(open_book)
-                    bot.send_message(call.message.chat.id, '\n\nСсылка на статью: ' + true_book + 
-                        '\n\nСсылка на канал: ' + split[0] + split[1],  reply_markup = complete)
-                    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: " + str(j+1) + "/5")
-                    if j+1 == 5:
-                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: 5/5 ✅")
-            five_articles()
+        selection_articles(list_book)
     elif call.data == 'cracker':
         list_book = ['https://t.me/s/vseapps/', 'https://t.me/s/slifcloud/']
-        true_list_book = []
-        for i in 1, 2, 3, 4, 5:
-            new_book = random.choice(list_book)
-            true_list_book.append(new_book)
-        for j in 0, 1, 2, 3, 4:
-            url = true_list_book[j]
-            page = requests.get(url)
-            soup = BeautifulSoup(page.text, "lxml")
-            string_1 = soup.find_all('div', class_='tgme_widget_message_wrap js-widget_message_wrap')[-1]
-            string_2 = string_1.find('div', class_='tgme_widget_message js-widget_message')
-            end = string_2.get('data-post')
-            ster = end.split('/')
-            def five_articles(): 
-                max_book = random.randint(1, int(ster[1]))
-                split = true_list_book[j].split('s/', 1)
-                true_book = split[0] + split[1] + str(max_book)
-                r = requests.get(true_book)
-                cumpot = re.search('checkActionsPosition()', r.text)
-                if cumpot == None:
-                    return five_articles()
-                else:
-                    complete = types.InlineKeyboardMarkup()
-                    open_book = types.InlineKeyboardButton(text = 'Открыть статью', url = true_book)
-                    complete.add(open_book)
-                    bot.send_message(call.message.chat.id, '\n\nСсылка на статью: ' + true_book + 
-                        '\n\nСсылка на канал: ' + split[0] + split[1],  reply_markup = complete)
-                    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: " + str(j+1) + "/5")
-                    if j+1 == 5:
-                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: 5/5 ✅")
-            five_articles()
+        selection_articles(list_book)
     elif call.data == 'poll':
         list_book = ['https://t.me/s/TriviaGames/']
-        true_list_book = []
-        for i in 1, 2, 3, 4, 5:
-            new_book = random.choice(list_book)
-            true_list_book.append(new_book)
-        for j in 0, 1, 2, 3, 4:
-            url = true_list_book[j]
-            page = requests.get(url)
-            soup = BeautifulSoup(page.text, "lxml")
-            string_1 = soup.find_all('div', class_='tgme_widget_message_wrap js-widget_message_wrap')[-1]
-            string_2 = string_1.find('div', class_='tgme_widget_message js-widget_message')
-            end = string_2.get('data-post')
-            ster = end.split('/')
-            def five_articles(): 
-                max_book = random.randint(1, int(ster[1]))
-                split = true_list_book[j].split('s/', 1)
-                true_book = split[0] + split[1] + str(max_book)
-                r = requests.get(true_book)
-                cumpot = re.search('checkActionsPosition()', r.text)
-                if cumpot == None:
-                    return five_articles()
-                else:
-                    complete = types.InlineKeyboardMarkup()
-                    open_book = types.InlineKeyboardButton(text = 'Открыть статью', url = true_book)
-                    complete.add(open_book)
-                    bot.send_message(call.message.chat.id, '\n\nСсылка на статью: ' + true_book + 
-                        '\n\nСсылка на канал: ' + split[0] + split[1],  reply_markup = complete)
-                    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: " + str(j+1) + "/5")
-                    if j+1 == 5:
-                        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: 5/5 ✅")
-            five_articles()
+        selection_articles(list_book)
     elif call.data == 'like0':
         basket.append(likes[0])
         bot.answer_callback_query(callback_query_id=call.id, text='Добавлено')
