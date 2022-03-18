@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 
 TOKEN = '1816922959:AAEZ84tdBD4TeCN6yRox4lJzeS9qTtnbLbI'
 bot = telebot.TeleBot(TOKEN)
+likes = []
+basket = []
 mark = ''
 
 
@@ -17,7 +19,8 @@ def menu():
     go_button = types.KeyboardButton(text = '📰 Запустить ленту')
     catalog_button = types.KeyboardButton(text = '🔝 Топ 5 каналов')
     interesting_button = types.KeyboardButton(text = '🍉 Выбрать категорию')
-    mark.row(go_button, catalog_button).row(interesting_button)
+    basket = types.KeyboardButton(text = '❤️ Понравившееся')
+    mark.row(go_button, catalog_button).row(interesting_button).add(basket)
     return mark
 
 
@@ -52,6 +55,20 @@ def answer(message):
         poll_post = types.InlineKeyboardButton(text = '🎱 Викторины', callback_data = 'category poll')
         category.row(history_post, geography_post).add(cracker_post, poll_post)
         bot.send_message(message.chat.id, '🍒 Выберите категорию', reply_markup = category)
+    elif message.text == '❤️ Понравившееся':
+        if len(basket) == 0:
+            bot.send_message(message.chat.id, 'У вас нет понравившихся статей')
+        else:
+            spis = types.InlineKeyboardMarkup()
+            for i in range(len(basket)):
+                page = requests.get(basket[i])
+                soup = BeautifulSoup(page.text, 'lxml')
+                string_1 = soup.find('head')
+                string_2 = string_1.find('meta', property="og:title")
+                name = string_2.get('content')
+                element = types.InlineKeyboardButton(text = name, callback_data = f'element {basket[i]}')
+                spis.add(element)
+            bot.send_message(message.chat.id, 'Понравившееся: ', reply_markup = spis)
     elif message.text == '🎲 5 случайных':
         list_book = true_channels.channels()
         true_list_book = []
@@ -88,7 +105,8 @@ def answer(message):
                         opis = string_2.get('content')
                         complete = types.InlineKeyboardMarkup()
                         open_book = types.InlineKeyboardButton(text = 'Открыть статью', url = true_book)
-                        complete.add(open_book)
+                        like = types.InlineKeyboardButton(text = 'Понравилось ❤️', callback_data = f'like {j}')
+                        complete.add(open_book, like)
                         likes.append(true_book)
                         bot.send_message(message.chat.id, f'{opis}\n__________________________________________________________\n\nСсылка на статью: {true_book}', reply_markup = complete)
                         bot.edit_message_text(chat_id=message.chat.id, text = f'Пожалуйста, подождите: {j + 1}/5'.format(message.text), message_id=message.message_id + 1)
@@ -119,14 +137,14 @@ def answer(message):
                     true_book = 'https://t.me/' + end
                     complete = types.InlineKeyboardMarkup()
                     open_book = types.InlineKeyboardButton(text = 'Открыть статью', url = 'https://t.me/' + end)
-                    #like = types.InlineKeyboardButton(text = 'Понравилось ❤️', callback_data = f'like {j}')
-                    #complete.add(open_book, like)
+                    like = types.InlineKeyboardButton(text = 'Понравилось ❤️', callback_data = f'like {j}')
+                    complete.add(open_book, like)
                     page = requests.get(true_book)
                     soup = BeautifulSoup(page.text, 'lxml')
                     string_1 = soup.find('head')
                     string_2 = string_1.find_all('meta')[5]
                     opis = string_2.get('content')
-                    #likes.append(true_book)
+                    likes.append(true_book)
                     bot.send_message(message.chat.id, f'{opis}\n___________________________\n\nСсылка на статью: {true_book}', reply_markup = complete)
                     bot.edit_message_text(chat_id=message.chat.id, text = f'Пожалуйста, подождите: {j + 1}/5'.format(message.text), message_id=message.message_id + 1)
                     if j + 1 == 5:
@@ -139,7 +157,12 @@ def answer(message):
 @bot.callback_query_handler(func = lambda call: True)
 def call_answer(call):
     check = call.data.split()
-    if check[0] == 'category':
+    if check[0] == 'like':
+        number = int(check[1])
+        if not(likes[number] in basket): 
+            basket.append(likes[number])
+        bot.answer_callback_query(callback_query_id=call.id, text='Добавлено')
+    elif check[0] == 'category':
         def choosing_category(call, category):
             if category == 'history':
                 list_book = ['https://t.me/s/history_0o/']
@@ -179,4 +202,17 @@ def call_answer(call):
                             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text = "Пожалуйста, подождите: 5/5 ✅")
                 five_articles()
         choosing_category(call, check[1])
+    elif check[0] == 'element':
+        def dm(call, link):
+            page = requests.get(link)
+            soup = BeautifulSoup(page.text, 'lxml')
+            string_1 = soup.find('head')
+            string_2 = string_1.find('meta', property="og:description")
+            opis = string_2.get('content')
+            open_book = types.InlineKeyboardButton(text = 'Открыть статью', url = check[1])
+            complete = types.InlineKeyboardMarkup()
+            like = types.InlineKeyboardButton(text = 'Удалить из понравившихся', callback_data = f'delete {check[1]}')
+            complete.add(open_book, like)
+            bot.send_message(call.message.chat.id, f'{opis}\n__________________________________________________________\n\nСсылка на статью: {check[1]}', reply_markup = complete)
+        dm(call, check[1])
 bot.polling(none_stop = True)
