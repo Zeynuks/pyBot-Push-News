@@ -27,6 +27,7 @@ def main_handler(message):
         for i in range(len(channels_url)):
             url = channels_url[i]
             page = requests.get(url)
+            url = channels_url[i].split('/s')[0] + channels_url[i].split('/s')[1]
             channel_parsing(message, page, i, url)
     elif message.text == '🍉 Категории':
         bot.send_message(message.chat.id, '🍒 Выберите категорию', reply_markup = category_keyboard())
@@ -57,9 +58,8 @@ def sub_handler(message):
                     string_2 = string_1.find('div', class_='tgme_widget_message js-widget_message')
                     end = string_2.get('data-post')
                     article_linc = 'https://t.me/' + end
-                    page = requests.get(article_linc)
-                    soup = BeautifulSoup(page.text, 'lxml')
-                    parsing_output(message, page, i, url)
+                    request_to_article_linc = requests.get(article_linc)
+                    parsing_output(message, request_to_article_linc, i, article_linc)
                 process()
             except AttributeError:
                 process()
@@ -77,7 +77,7 @@ def callback_handler(call):
         bot.answer_callback_query(callback_query_id=call.id, text='Добавлено')
         keyboard = types.InlineKeyboardMarkup()
         open_book = types.InlineKeyboardButton(text = 'Открыть', url = check[1])
-        like = types.InlineKeyboardButton(text = '❤️', row_width= 3, callback_data = f'liked delete {check[1]}')
+        like = types.InlineKeyboardButton(text = '❤️', callback_data = f'liked delete {check[1]}')
         keyboard.add(open_book, like)
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=keyboard)
         #basket = list(set(basket))
@@ -91,6 +91,7 @@ def callback_handler(call):
         elif check[1] == 'poll':
             list_book = ['https://t.me/s/TriviaGames/']*5
         bot.answer_callback_query(callback_query_id=call.id, text='Производится подбор')
+        bot.send_message(call.message.chat.id, 'Пожалуйста, подождите: 0/5')
         article_parsing(call.message, list_book)
     elif check[0] == 'liked':
         liked_page(call, check)
@@ -104,29 +105,40 @@ def liked_page(call, check):
         article_text = string_2.get('content')
         keyboard = types.InlineKeyboardMarkup()
         open_book = types.InlineKeyboardButton(text = 'Открыть', url = check[2])
-        like = types.InlineKeyboardButton(text = '❤️', row_width= 3, callback_data = f'liked delete {check[2]}')
+        like = types.InlineKeyboardButton(text = '❤️', callback_data = f'liked delete {check[2]}')
         keyboard.add(open_book, like)
         bot.answer_callback_query(callback_query_id=call.id)
         bot.edit_message_text(chat_id=call.message.chat.id, text=f'{article_text}\n\n<a href="{check[2]}">Источник</a>',
         parse_mode='HTML',message_id=call.message.message_id, reply_markup= keyboard)
     elif check[1] == 'delete':
-        
         basket.remove(check[2])
         bot.answer_callback_query(callback_query_id=call.id, text='Удалено 🗑')
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup= article_keyboard(check[2]))
     elif check[1] == 'turn':
         bot.answer_callback_query(callback_query_id=call.id)
         if check[2] == 'right':
-            maximum = (int(check[2])+1)*5
-            minimum = int(check[2])*5
+            maximum = (int(check[3])+1)*5
+            minimum = int(check[3])*5
+            if maximum > len(basket) + 5 - len(basket) % 5:
+                maximum = int(check[3])*5
+                minimum = (int(check[3])-1)*5
             legendary_potatoes(call.message, minimum, maximum, 0)
         elif check[2] == 'left':
-            minimum = (int(check[2])-2)*5
+            minimum = (int(check[3])-2)*5
             if minimum < 0:
                 minimum = 0
                 maximum = 5
             else:
-                maximum = (int(check[2])-1)*5
+                maximum = (int(check[3])-1)*5
             legendary_potatoes(call.message, minimum, maximum, 0)
+    elif check[1] == 'menu':
+        spis = types.InlineKeyboardMarkup()
+        for stran in range((len(basket) + 5 - len(basket) % 5) // 5):
+            spis.add(types.InlineKeyboardButton(text = f'{stran + 1}', callback_data = f'liked spis {stran + 1}'))
+        bot.edit_message_text(chat_id=call.message.chat.id, text='Выберите страницу:  ', message_id=call.message.message_id, reply_markup = spis)
+    elif check[1] == 'spis':
+        minimum = (int(check[2])-1)*5
+        maximum = int(check[2])*5
+        legendary_potatoes(call.message, minimum, maximum, 0)
 
 bot.infinity_polling()
